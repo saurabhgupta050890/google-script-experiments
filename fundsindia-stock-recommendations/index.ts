@@ -17,11 +17,12 @@ interface IStockRecommendation {
 }
 
 const getPortfolioAlert = () => {
-  const portfolioAlertThread: GoogleAppsScript.Gmail.GmailThread[] = GmailApp.search(
-    "from:info@fundsindia.com AND subject:Portfolio Alert for the Week",
-    0,
-    1
-  );
+  const portfolioAlertThread: GoogleAppsScript.Gmail.GmailThread[] =
+    GmailApp.search(
+      "from:info@fundsindia.com AND subject:Portfolio Alert for the Week",
+      0,
+      1
+    );
   const messages: GoogleAppsScript.Gmail.GmailMessage[] = [];
   portfolioAlertThread.forEach((thread) => {
     messages.push(thread.getMessages()[0]);
@@ -55,6 +56,10 @@ const updateStockSheet = (stockRecommendation: IStockRecommendation) => {
   }
 
   sellDate.setDate(sellDate.getDate() + addDays);
+  const approxQuantity = Math.floor(
+    MAX_INVESTMENT_AMOUT /
+      Number(stockRecommendation.cmp.toString().replace(",", ""))
+  );
 
   sheet.appendRow([
     Utilities.formatDate(today, "Asia/Calcutta", "EEE, MMM dd, YYYY"), // Date
@@ -64,12 +69,11 @@ const updateStockSheet = (stockRecommendation: IStockRecommendation) => {
     stockRecommendation.target,
     stockRecommendation.time_period,
     Utilities.formatDate(buyDate, "Asia/Calcutta", "EEE, MMM dd, YYYY"), // Buy date
-    Math.floor(MAX_INVESTMENT_AMOUT / stockRecommendation.cmp), // quantity
+    approxQuantity, // quantity
     "", // Actual buy price
     "", // gross amount
     Utilities.formatDate(sellDate, "Asia/Calcutta", "EEE, MMM dd, YYYY"),
   ]);
-  // Logger.log(Utilities.formatDate(new Date(), "Asia/Calcutta", "EEE, MMM dd, YYYY"));
 };
 
 function getWeeklyStockRecommendations() {
