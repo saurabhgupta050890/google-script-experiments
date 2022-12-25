@@ -6,6 +6,8 @@ const stockRecommendationObjectKeys = {
   5: "time_period",
 };
 
+const MAX_INVESTMENT_AMOUT = 25000;
+
 interface IStockRecommendation {
   stock: string;
   cmp: number;
@@ -62,7 +64,7 @@ const updateStockSheet = (stockRecommendation: IStockRecommendation) => {
     stockRecommendation.target,
     stockRecommendation.time_period,
     Utilities.formatDate(buyDate, "Asia/Calcutta", "EEE, MMM dd, YYYY"), // Buy date
-    "", // quantity
+    Math.floor(MAX_INVESTMENT_AMOUT / stockRecommendation.cmp), // quantity
     "", // Actual buy price
     "", // gross amount
     Utilities.formatDate(sellDate, "Asia/Calcutta", "EEE, MMM dd, YYYY"),
