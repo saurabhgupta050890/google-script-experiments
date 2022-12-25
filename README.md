@@ -2,4 +2,4 @@
 
 A collection of Google App Scripts projects for different experiments
 
-All projects created with @google/clasp
+All projects created with `@google/clasp`
