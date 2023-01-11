@@ -32,7 +32,7 @@ const tableToDistribution = (
   const tableRows = table.find("tbody").last().find("tr");
   const columns = Object.keys(keys).map((key) => parseInt(key, 10));
   const distribution: IMutualFundStock[] = [];
-  tableRows.each((index, el) => {
+  tableRows.each((_idx, el) => {
     // @ts-ignore
     const row = $(el);
     const distributionObj = {};
@@ -55,16 +55,26 @@ const tableToDistribution = (
   });
 };
 
-const extractMututalFundDistribution = (
-  fund: IMoneyControlSearchSuggestion
-) => {
-  const portfolioUrl = getPortfolioUrl(fund.link_src);
+const extractMututalFundDistribution = (portfolioUrl: string) => {
   const resp = UrlFetchApp.fetch(portfolioUrl, { muteHttpExceptions: true });
   // @ts-ignore
   const $ = Cheerio.load(resp.getContentText());
   const equityTable = $("#equityCompleteHoldingTable");
   const debtTable = $("#portfolioDebtTable");
   const othersTable = $("table.portf_others");
+  const category = $(".sub_category_text").eq(0).text().trim();
+  const updateDate = $(".subtext")
+    .map((_idx, el) => {
+      const span = $(el);
+      return span.text().trim();
+    })
+    .get()
+    .filter((text: string) => {
+      return text.startsWith("(as on");
+    })[0]
+    .replace(/[()]/gi, "")
+    .replace(/as\son/gi, "")
+    .trim();
 
   const equityKeys = { 0: "name", 1: "sector", 4: "percentage" };
   const equityDistribution = tableToDistribution(equityTable, equityKeys, $);
@@ -79,6 +89,8 @@ const extractMututalFundDistribution = (
     arr.reduce((acc, cur) => Number((acc + cur.percentage).toFixed(2)), 0);
 
   return {
+    category: category,
+    updateAt: updateDate,
     equity: {
       percentage: sumPercent(equityDistribution),
       distribution: equityDistribution,
@@ -130,9 +142,22 @@ const prepareMutualFundMaster = () => {
   const jsonColumnIndex = data[0].indexOf("JSON");
 
   for (let i = 1; i < data.length; i++) {
-    const [mutualFundName, isin, amfi, lastUpdated] = data[i];
-    const mf = extractMututalFundDetails(mutualFundName);
-    const mfDistribution = extractMututalFundDistribution(mf);
+    const [mutualFundName, isin, amfi, url, lastUpdated] = data[i];
+
+    let portfolioUrl = "";
+
+    if (url) {
+      portfolioUrl = url;
+    } else {
+      const mf = extractMututalFundDetails(mutualFundName);
+      portfolioUrl = getPortfolioUrl(mf.link_src);
+
+      sheet.getRange(i + 1, jsonColumnIndex - 1).setValue(portfolioUrl);
+    }
+
+    Logger.log(`Getting data from: ${portfolioUrl}`);
+    const mfDistribution = extractMututalFundDistribution(portfolioUrl);
+
     sheet.getRange(i + 1, jsonColumnIndex).setValue(new Date().toISOString());
     sheet
       .getRange(i + 1, jsonColumnIndex + 1)
