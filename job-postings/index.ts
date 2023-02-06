@@ -18,7 +18,9 @@ const extractMonsterMails = () => {
   return messages;
 };
 
-const createBlogPost = (title: string, content: string) => {
+const retryBucket: { title: string; content: string }[] = [];
+
+const createBlogPost = (title: string, content: string, retry = true) => {
   const postUrl = `https://www.googleapis.com/blogger/v3/blogs/${blogId}/posts`;
 
   const options: GoogleAppsScript.URL_Fetch.URLFetchRequestOptions = {
@@ -46,6 +48,12 @@ const createBlogPost = (title: string, content: string) => {
     }
   } else {
     Logger.log(response.getContentText());
+    if (retry) {
+      retryBucket.push({
+        title: title,
+        content: content,
+      });
+    }
     return null;
   }
 };
@@ -95,6 +103,8 @@ const prepareMonsterJobPost = (
   if (url) {
     Logger.log(url);
   }
+
+  Utilities.sleep(5000);
 };
 
 const prepareJobPosts = () => {
@@ -102,4 +112,18 @@ const prepareJobPosts = () => {
   monsterJobs.forEach((message) => {
     prepareMonsterJobPost(message);
   });
+
+  if (retryBucket.length > 0) {
+    Utilities.sleep(5000);
+    while (retryBucket.length > 0) {
+      Logger.log("Retrying failed attempts");
+      const post = retryBucket.pop();
+      if (post) {
+        const url = createBlogPost(post.title, post.content, false);
+        if (url) {
+          Logger.log(url);
+        }
+      }
+    }
+  }
 };
