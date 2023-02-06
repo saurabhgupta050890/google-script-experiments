@@ -1,0 +1,6 @@
+{
+  "dependencies": {
+    "@types/cheerio": "^0.22.31",
+    "@types/google-apps-script": "^1.0.57"
+  }
+}
