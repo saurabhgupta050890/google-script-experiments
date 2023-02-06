@@ -48,12 +48,12 @@ const createBlogPost = (title: string, content: string, retry = true) => {
     }
   } else {
     Logger.log(response.getContentText());
-    if (retry) {
+    /* if (retry) {
       retryBucket.push({
         title: title,
         content: content,
       });
-    }
+    } */
     return null;
   }
 };
@@ -113,7 +113,7 @@ const prepareJobPosts = () => {
     prepareMonsterJobPost(message);
   });
 
-  if (retryBucket.length > 0) {
+  /* if (retryBucket.length > 0) {
     Utilities.sleep(5000);
     while (retryBucket.length > 0) {
       Logger.log("Retrying failed attempts");
@@ -125,5 +125,5 @@ const prepareJobPosts = () => {
         }
       }
     }
-  }
+  } */
 };
