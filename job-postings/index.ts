@@ -68,7 +68,7 @@ const prepareMonsterJobPost = (
   const $ = Cheerio.load(content);
 
   const jobDetailsTable = $("table");
-  const jobDetailsHTML = jobDetailsTable
+  let jobDetailsHTML = jobDetailsTable
     .find("tr")
     .eq(4)
     .find("td")
@@ -92,6 +92,14 @@ const prepareMonsterJobPost = (
     }
     return acc;
   }, []);
+
+  const jobsHeader = jobDetailsTable.find("table").text();
+  const matches = jobsHeader.match(
+    /([a-zA-Z0-9._+-]+@[a-zA-Z0-9._-]+\.[a-zA-Z0-9._-]+)/gi
+  );
+  if (matches) {
+    jobDetailsHTML = `${jobDetailsHTML}<br /><br /> Email: ${matches[0]}`;
+  }
 
   // Logger.log(jobDetailsHTML);
 
